@@ -134,7 +134,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>归档<span class="badge">1</span></a>
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>归档<span class="badge">2</span></a>
 
   </li>
   </ul>
@@ -160,6 +160,90 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://github.com/LeslieCheung7/LeslieCheung7.github.io.git/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="LeslieCheung7">
+      <meta itemprop="description" content="嗷呜呜呜呜呜呜呜~">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="何时再见新月">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">函数调用栈详解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-10-28 15:20:53 / 修改时间：15:25:42" itemprop="dateCreated datePublished" datetime="2020-10-28T15:20:53+08:00">2020-10-28</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>在x86，32位Linux环境下</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sum</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">左括号对应的指令为：</span></span><br><span class="line"><span class="comment">push ebp 将ebp入栈</span></span><br><span class="line"><span class="comment">mov ebp, esp 将esp的值赋给ebp，现在ebp开始指向sum函数的栈底</span></span><br><span class="line"><span class="comment">sub esp, 4Ch 给sum函数开辟栈帧空间，大小为相对于栈底指针的偏移值4Ch(此处这个值是随意给的)</span></span><br><span class="line"><span class="comment">rep stos winodows系统下vs会将新开辟的栈帧空间全部赋值为0xCCCCCCCC，而Linux下的编译器没有此操作</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="keyword">int</span> temp = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-4], 0 将temp的值0放入栈底指针的偏移处，偏移量为ebp-4</span></span><br><span class="line">    temp = a + b;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    1.mov eax, dword ptr[ebp+0Ch] 将形参b的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">    2.add eax, dword ptr[ebp+8] 在eax寄存器中进行a与b的值的加操作</span></span><br><span class="line"><span class="comment">    3.mov dword ptr[ebp-4], eax 将eax寄存器中的值放入temp中</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">return</span> temp;</span><br><span class="line">    <span class="comment">//mov eax, dword ptr[ebp-4] 因为temp是局部变量，不能传出，所以将temp的值放入eax寄存器中</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">1.mov esp, ebp 回退栈帧，将栈空间交还给系统，将ebp的值赋给esp</span></span><br><span class="line"><span class="comment">  int* func()</span></span><br><span class="line"><span class="comment">  &#123;</span></span><br><span class="line"><span class="comment">  	int data = 10;</span></span><br><span class="line"><span class="comment">  	return &amp;data;</span></span><br><span class="line"><span class="comment">  &#125;</span></span><br><span class="line"><span class="comment">  这种写法不安全，因为在return前已经将栈帧空间交还给系统了</span></span><br><span class="line"><span class="comment">2.pop ebp 出栈，并将出栈的值赋给ebp，因为在左括号时将ebp入栈了，此时会将ebp重新指向main函数的栈底</span></span><br><span class="line"><span class="comment">3.pop 把出栈的内容，main()函数中下一行指令的地址，放入CPU的PC寄存器中(PC寄存器用于存放指令的地址)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-4], 0Ah 将a的值0Ah放入栈底指针的偏移处，偏移量为ebp-4</span></span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">20</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-8], 0Ah 将b的值14h放入栈底指针的偏移处，偏移量为ebp-8</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> ret = sum(a, b);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    1.将ret放入相对于栈底指针偏移量为ebp-0C处，初值为sum函数的返回值</span></span><br><span class="line"><span class="comment">    2.将sum函数的实参变量压入栈中，并且从右向左进行入栈；形参变量的内存开辟是调用方进行的 </span></span><br><span class="line"><span class="comment">      mov eax, dword ptr[ebp-8] 将b的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">      push eax 将实参变量b的值压入栈中</span></span><br><span class="line"><span class="comment">      mov eax, dword ptr[ebp-4] 将a的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">      push eax 将实参变量a的值压入栈中</span></span><br><span class="line"><span class="comment">    3.call sum 函数调用指令，其作用分两步</span></span><br><span class="line"><span class="comment">      push EIP 将下一条指令的地址入栈保存起来</span></span><br><span class="line"><span class="comment">      sub esp, 4 对应移动栈顶指针</span></span><br><span class="line"><span class="comment">    4.add esp, 8 将两个形参变量占用的空间交还给系统，此时esp指向最初main()函数的栈顶</span></span><br><span class="line"><span class="comment">      mov dword ptr[ebp-0Ch], eax 将eax寄存器中存放的temp的值赋给ret</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;ret:&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">补充：</span></span><br><span class="line"><span class="comment">EAX：累加(Accumulator)寄存器，常用于函数返回值</span></span><br><span class="line"><span class="comment">ESP：堆栈(Stack)指针寄存器，指向堆栈顶部</span></span><br><span class="line"><span class="comment">EBP：基址指针寄存器，指向当前堆栈底部</span></span><br><span class="line"><span class="comment">EIP：指令寄存器，指向下一条指令的地址</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>如图所示：</p>
+<p><img src="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png" alt="函数调用栈详解.png"></p>
+<p>其中ebp与esp之间的栈帧空间是main()函数自身的，在调用完sum()函数之后会释放掉形参变量开辟在main()函数中的栈帧空间；而绿色部分是sum()函数所申请的栈帧空间，在执行完sum()函数以后已经回收了。</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <div>
+      
+    </div>
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -380,7 +464,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -433,13 +517,13 @@
       <i class="fa fa-chart-area"></i>
     </span>
       <span class="post-meta-item-text">站点总字数：</span>
-    <span title="站点总字数">2k</span>
+    <span title="站点总字数">3k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">1 分钟</span>
+    <span title="站点阅读时长">3 分钟</span>
 </div>
 
         
