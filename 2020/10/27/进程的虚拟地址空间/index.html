@@ -20,22 +20,22 @@
     var CONFIG = {"hostname":"lesliecheung7.github.io.git","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="本篇详细介绍了调用一个函数的过程，并通过汇编指令来加深对调用栈的理解。">
+  <meta name="description" content="本篇详细介绍了一个进程的虚拟地址空间的划分情况。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="函数调用栈详解">
-<meta property="og:url" content="https://lesliecheung7.github.io.git/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:title" content="进程的虚拟地址空间">
+<meta property="og:url" content="https://lesliecheung7.github.io.git/2020/10/27/%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/index.html">
 <meta property="og:site_name" content="何时再见新月">
-<meta property="og:description" content="本篇详细介绍了调用一个函数的过程，并通过汇编指令来加深对调用栈的理解。">
+<meta property="og:description" content="本篇详细介绍了一个进程的虚拟地址空间的划分情况。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png">
-<meta property="article:published_time" content="2020-10-28T07:20:53.000Z">
-<meta property="article:modified_time" content="2020-10-29T06:17:45.380Z">
+<meta property="og:image" content="https://i.loli.net/2020/10/27/H7SszMO9p3T5i4A.png">
+<meta property="article:published_time" content="2020-10-27T09:31:32.000Z">
+<meta property="article:modified_time" content="2020-10-29T06:19:34.765Z">
 <meta property="article:author" content="LeslieCheung7">
 <meta property="article:tag" content="面试">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png">
+<meta name="twitter:image" content="https://i.loli.net/2020/10/27/H7SszMO9p3T5i4A.png">
 
-<link rel="canonical" href="https://lesliecheung7.github.io.git/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/">
+<link rel="canonical" href="https://lesliecheung7.github.io.git/2020/10/27/%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/">
 
 
 <script id="page-configurations">
@@ -48,7 +48,7 @@
   };
 </script>
 
-  <title>函数调用栈详解 | 何时再见新月</title>
+  <title>进程的虚拟地址空间 | 何时再见新月</title>
   
 
 
@@ -169,7 +169,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/">
+    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/2020/10/27/%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/head.jpg">
@@ -182,7 +182,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          函数调用栈详解
+          进程的虚拟地址空间
         </h1>
 
         <div class="post-meta">
@@ -192,14 +192,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-10-28 15:20:53" itemprop="dateCreated datePublished" datetime="2020-10-28T15:20:53+08:00">2020-10-28</time>
+              <time title="创建时间：2020-10-27 17:31:32" itemprop="dateCreated datePublished" datetime="2020-10-27T17:31:32+08:00">2020-10-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-29 14:17:45" itemprop="dateModified" datetime="2020-10-29T14:17:45+08:00">2020-10-29</time>
+                <time title="修改时间：2020-10-29 14:19:34" itemprop="dateModified" datetime="2020-10-29T14:19:34+08:00">2020-10-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -207,7 +207,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C++</span></a>
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
                 </span>
             </span>
 
@@ -226,7 +226,7 @@
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               <span>1 分钟</span>
             </span>
-            <div class="post-description">本篇详细介绍了调用一个函数的过程，并通过汇编指令来加深对调用栈的理解。</div>
+            <div class="post-description">本篇详细介绍了一个进程的虚拟地址空间的划分情况。</div>
 
         </div>
       </header>
@@ -238,13 +238,72 @@
 
       
         <blockquote>
-<p>在x86，32位Linux环境下</p>
+<p>前提：在x86，32位Linux环境下</p>
 </blockquote>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sum</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">左括号对应的指令为：</span></span><br><span class="line"><span class="comment">push ebp 将ebp入栈</span></span><br><span class="line"><span class="comment">mov ebp, esp 将esp的值赋给ebp，现在ebp开始指向sum函数的栈底</span></span><br><span class="line"><span class="comment">sub esp, 4Ch 给sum函数开辟栈帧空间，大小为相对于栈底指针的偏移值4Ch(此处这个值是随意给的)</span></span><br><span class="line"><span class="comment">rep stos winodows系统下vs会将新开辟的栈帧空间全部赋值为0xCCCCCCCC，而Linux下的编译器没有此操作</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="keyword">int</span> temp = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-4], 0 将temp的值0放入栈底指针的偏移处，偏移量为ebp-4</span></span><br><span class="line">    temp = a + b;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    1.mov eax, dword ptr[ebp+0Ch] 将形参b的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">    2.add eax, dword ptr[ebp+8] 在eax寄存器中进行a与b的值的加操作</span></span><br><span class="line"><span class="comment">    3.mov dword ptr[ebp-4], eax 将eax寄存器中的值放入temp中</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">return</span> temp;</span><br><span class="line">    <span class="comment">//mov eax, dword ptr[ebp-4] 因为temp是局部变量，不能传出，所以将temp的值放入eax寄存器中</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">1.mov esp, ebp 回退栈帧，将栈空间交还给系统，将ebp的值赋给esp</span></span><br><span class="line"><span class="comment">  int* func()</span></span><br><span class="line"><span class="comment">  &#123;</span></span><br><span class="line"><span class="comment">  	int data = 10;</span></span><br><span class="line"><span class="comment">  	return &amp;data;</span></span><br><span class="line"><span class="comment">  &#125;</span></span><br><span class="line"><span class="comment">  这种写法不安全，因为在return前已经将栈帧空间交还给系统了</span></span><br><span class="line"><span class="comment">2.pop ebp 出栈，并将出栈的值赋给ebp，因为在左括号时将ebp入栈了，此时会将ebp重新指向main函数的栈底</span></span><br><span class="line"><span class="comment">3.pop 把出栈的内容，main()函数中下一行指令的地址，放入CPU的PC寄存器中(PC寄存器用于存放指令的地址)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-4], 0Ah 将a的值0Ah放入栈底指针的偏移处，偏移量为ebp-4</span></span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">20</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-8], 0Ah 将b的值14h放入栈底指针的偏移处，偏移量为ebp-8</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> ret = sum(a, b);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    1.将ret放入相对于栈底指针偏移量为ebp-0C处，初值为sum函数的返回值</span></span><br><span class="line"><span class="comment">    2.将sum函数的实参变量压入栈中，并且从右向左进行入栈；形参变量的内存开辟是调用方进行的 </span></span><br><span class="line"><span class="comment">      mov eax, dword ptr[ebp-8] 将b的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">      push eax 将实参变量b的值压入栈中</span></span><br><span class="line"><span class="comment">      mov eax, dword ptr[ebp-4] 将a的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">      push eax 将实参变量a的值压入栈中</span></span><br><span class="line"><span class="comment">    3.call sum 函数调用指令，其作用分两步</span></span><br><span class="line"><span class="comment">      push EIP 将下一条指令的地址入栈保存起来</span></span><br><span class="line"><span class="comment">      sub esp, 4 对应移动栈顶指针</span></span><br><span class="line"><span class="comment">    4.add esp, 8 将两个形参变量占用的空间交还给系统，此时esp指向最初main()函数的栈顶</span></span><br><span class="line"><span class="comment">      mov dword ptr[ebp-0Ch], eax 将eax寄存器中存放的temp的值赋给ret</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;ret:&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">补充：</span></span><br><span class="line"><span class="comment">EAX：累加(Accumulator)寄存器，常用于函数返回值</span></span><br><span class="line"><span class="comment">ESP：堆栈(Stack)指针寄存器，指向堆栈顶部</span></span><br><span class="line"><span class="comment">EBP：基址指针寄存器，指向当前堆栈底部</span></span><br><span class="line"><span class="comment">EIP：指令寄存器，指向下一条指令的地址</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>程序在经过编译链接完成之后会产生一个.out(windows下为.exe)的可执行文件，并且存放在磁盘上，而当要运行这个可执行文件时会把它加载到内存中，并且系统会产生一个进程。但是该文件不可能直接加载到物理内存中，而是由系统为它分配一部分虚拟内存，称为进程的虚拟地址空间。</p>
+<p>供操作系统执行的二进制文件中，指令和数据**(会生成符号存放在符号表中的)**是分开存放的。原因如下：</p>
+<ol>
+<li>程序执行之后，代码和数据可以被映射到不同属性的虚拟内存中。因为代码一般是只读的，而数据是可读可写的；</li>
+<li>现代CPU有强大的缓存体系。程序和代码分离可以提高程序的局部性，增加缓存命中的概率；</li>
+<li>还有最重要的一个原因是当有多个程序副本在运行的时候，只读部分可以只在内存中保留一份，这样大大节省了内存。</li>
+</ol>
+<p>进程的虚拟地址空间大小共4GB，一部分是大小为1GB的内核空间，另一部分是大小为3GB的用户空间，注意<strong>用户空间是进程私有的，内核空间是共享的</strong>，即意味每个进程都有自己独立的用户空间，而内核空间只有一份并且所有进程共享。</p>
+<p><img src="https://i.loli.net/2020/10/27/H7SszMO9p3T5i4A.png" alt="虚拟地址空间.png"></p>
+<h4 id="用户空间："><a href="#用户空间：" class="headerlink" title="用户空间："></a>用户空间：</h4><p>用户空间从上向下分别分：</p>
+<ul>
+<li>第一部分：0x00000000至0x08048000</li>
+</ul>
+<p>为预留的不可访问的空间，用于存放常量，例如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *p = <span class="literal">nullptr</span>;</span><br><span class="line"><span class="built_in">strlen</span>(p);</span><br></pre></td></tr></table></figure>
 
-<p>如图所示：</p>
-<p><img src="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png" alt="函数调用栈详解.png"></p>
-<p>其中ebp与esp之间的栈帧空间是main()函数自身的，在调用完sum()函数之后会释放掉形参变量开辟在main()函数中的栈帧空间；而绿色部分是sum()函数所申请的栈帧空间，在执行完sum()函数以后已经回收了。</p>
+<p>此操作会使程序崩溃，因为指针p指向0地址空间，而该空间是不可以访问的。</p>
+<ul>
+<li>第二部分：.text段(或称为代码段)</li>
+</ul>
+<p>用于存放指令，例如除去数据以外的代码与main()函数中的三个局部变量abc(不会生成符号)则会生成对应的指令存放在该区域空间。<strong>因为该段也是只读的，所以也可以和.rodata划分在同一区域。</strong></p>
+<p>补充：main()函数中的a变量所对应的语句会生成mov指令存放在.text段，而当该指令运行时，CPU会在栈上开辟一个4字节的空间用来存放12这个整数，而不是该语句就存放在栈上。</p>
+<ul>
+<li>第三部分：.rodata段</li>
+</ul>
+<p>只可以读但不可以写，例如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *p = <span class="string">&quot;hello world&quot;</span>; <span class="comment">//定义为局部变量</span></span><br><span class="line">*p = <span class="string">&#x27;a&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>此操作会使程序崩溃，因为常量字符串会存放在.rodata段，而该区域空间只有读权限，对p指针进行修改便会报错。而在新版本编译器中，会建议将常量字符串用const修饰，便不会出现该问题。注意：<strong>虽然*p定义在局部变量区，即栈上，但是”hello world”存放在只读数据段。</strong></p>
+<p>补充：对于const修饰的全局变量，存储在只读数据段，编译期最初将其保存在符号表中，第一次使用时为其分配内存，在程序结束时释放。对于const修饰的局部变量，则会存储在栈中。</p>
+<ul>
+<li>第四部分：.data段</li>
+</ul>
+<p>用于存放<strong>已初始化且初始化不为0</strong>的全局变量或静态变量。</p>
+<ul>
+<li>第五部分：.bss段</li>
+</ul>
+<p>用于存放<strong>未初始化或初始化为0</strong>的全局变量或静态变量。例如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> gdata; <span class="comment">//定义为全局变量</span></span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; gdata &lt;&lt; <span class="built_in">endl</span>;</span><br></pre></td></tr></table></figure>
+
+<p>打印gdata的值为0，因为gdata为全局变量，会存放在.bss段，而操作系统会将.bss段中的数据全部置为0。静态变量同理。</p>
+<ul>
+<li>第六部分：.heap空间</li>
+</ul>
+<p>初始时不存在，而在程序中调用new或malloc时才会分配的空间，即为堆空间。<strong>堆在分配空间时从低地址到高地址。</strong></p>
+<ul>
+<li><p>第七部分：程序中加载的动态链接库，也为共享库，windows下为.dll库，Linux下为.so库。</p>
+</li>
+<li><p>第八部分：stack空间</p>
+</li>
+</ul>
+<p>函数运行时或产生线程时线程独有的栈空间。<strong>栈在分配空间时从高地址到低地址。</strong></p>
+<ul>
+<li>第九部分：存放命令行参数和环境变量的区域。</li>
+</ul>
+<h4 id="内核空间"><a href="#内核空间" class="headerlink" title="内核空间"></a>内核空间</h4><p>内核空间分为三部分区域，分别为：</p>
+<ul>
+<li><p>ZONE_DMA：大小为16MB。</p>
+</li>
+<li><p>ZONE_NORMAL：大小为800+MB，主要存放进程控制块PCB，以及内核空间的线程，以及内核函数所依赖的栈空间。</p>
+</li>
+<li><p>ZONE_HIGHMEM：高端地址空间，用于地址映射。</p>
+</li>
+</ul>
 
     </div>
 
@@ -271,7 +330,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="https://lesliecheung7.github.io.git/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/" title="函数调用栈详解">https://lesliecheung7.github.io.git/函数调用栈详解/</a>
+    <a href="https://lesliecheung7.github.io.git/2020/10/27/%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/" title="进程的虚拟地址空间">https://lesliecheung7.github.io.git/2020/10/27/进程的虚拟地址空间/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -290,13 +349,10 @@
 
         
     <div class="post-nav">
+      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/" rel="prev" title="进程的虚拟地址空间">
-      <i class="fa fa-chevron-left"></i> 进程的虚拟地址空间
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/%E7%BC%96%E8%AF%91%E9%93%BE%E6%8E%A5%E5%8E%9F%E7%90%86/" rel="next" title="编译链接原理">
-      编译链接原理 <i class="fa fa-chevron-right"></i>
+    <a href="/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/" rel="next" title="函数调用栈详解">
+      函数调用栈详解 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -356,6 +412,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">用户空间：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E7%A9%BA%E9%97%B4"><span class="nav-number">2.</span> <span class="nav-text">内核空间</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
