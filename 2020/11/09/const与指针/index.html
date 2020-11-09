@@ -20,22 +20,20 @@
     var CONFIG = {"hostname":"lesliecheung7.github.io.git","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="本篇详细讲解了调用一个函数的过程，并通过汇编指令来加深对调用栈的理解。">
+  <meta name="description" content="本篇详细讲解了const与一二级指针结合的问题，与引用结合的问题。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="函数调用栈详解">
-<meta property="og:url" content="https://lesliecheung7.github.io.git/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:title" content="const与指针">
+<meta property="og:url" content="https://lesliecheung7.github.io.git/2020/11/09/const%E4%B8%8E%E6%8C%87%E9%92%88/index.html">
 <meta property="og:site_name" content="何时再见新月">
-<meta property="og:description" content="本篇详细讲解了调用一个函数的过程，并通过汇编指令来加深对调用栈的理解。">
+<meta property="og:description" content="本篇详细讲解了const与一二级指针结合的问题，与引用结合的问题。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png">
-<meta property="article:published_time" content="2020-10-28T07:20:53.000Z">
-<meta property="article:modified_time" content="2020-10-29T09:56:26.159Z">
+<meta property="article:published_time" content="2020-11-09T07:53:51.000Z">
+<meta property="article:modified_time" content="2020-11-09T08:25:19.683Z">
 <meta property="article:author" content="LeslieCheung7">
 <meta property="article:tag" content="面试">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png">
 
-<link rel="canonical" href="https://lesliecheung7.github.io.git/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/">
+<link rel="canonical" href="https://lesliecheung7.github.io.git/2020/11/09/const%E4%B8%8E%E6%8C%87%E9%92%88/">
 
 
 <script id="page-configurations">
@@ -48,7 +46,7 @@
   };
 </script>
 
-  <title>函数调用栈详解 | 何时再见新月</title>
+  <title>const与指针 | 何时再见新月</title>
   
 
 
@@ -169,7 +167,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/">
+    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/2020/11/09/const%E4%B8%8E%E6%8C%87%E9%92%88/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/head.jpg">
@@ -182,7 +180,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          函数调用栈详解
+          const与指针
         </h1>
 
         <div class="post-meta">
@@ -191,16 +189,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2020-10-28 15:20:53" itemprop="dateCreated datePublished" datetime="2020-10-28T15:20:53+08:00">2020-10-28</time>
+              <time title="创建时间：2020-11-09 15:53:51 / 修改时间：16:25:19" itemprop="dateCreated datePublished" datetime="2020-11-09T15:53:51+08:00">2020-11-09</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-29 17:56:26" itemprop="dateModified" datetime="2020-10-29T17:56:26+08:00">2020-10-29</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -217,7 +209,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1.7k</span>
+              <span>1.8k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -226,7 +218,7 @@
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               <span>2 分钟</span>
             </span>
-            <div class="post-description">本篇详细讲解了调用一个函数的过程，并通过汇编指令来加深对调用栈的理解。</div>
+            <div class="post-description">本篇详细讲解了const与一二级指针结合的问题，与引用结合的问题。</div>
 
         </div>
       </header>
@@ -237,18 +229,56 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <blockquote>
-<p>在x86，32位Linux环境下</p>
-</blockquote>
-<p>其中ebp与esp之间的栈帧空间是main()函数自身的，在调用完sum()函数之后会释放掉形参变量开辟在main()函数中的栈帧空间；而绿色部分是sum()函数所申请的栈帧空间，在执行完sum()函数以后已经回收了。</p>
+        <h3 id="const详解"><a href="#const详解" class="headerlink" title="const详解"></a>const详解</h3><p>在C语言中，const修饰的变量，可以不用初始化，但是为了后续使用方便，建议初始化；并且const所修饰的量不叫作常量，而叫做常变量，<strong>本质上仍是变量</strong>。例如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span> a = <span class="number">20</span>;</span><br><span class="line">    <span class="comment">//int array[a] = &#123;&#125;; //此行会报错，因为变量不能作为数组的长度</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> *p = (<span class="keyword">int</span>*)&amp;a;</span><br><span class="line">    *p = <span class="number">30</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d %d %d \n&quot;</span>, a, *p, *(&amp;a));</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    打印值为：30 30 30</span></span><br><span class="line"><span class="comment">    即const只是在语法上保证a不可以作为左值被修改</span></span><br><span class="line"><span class="comment">    但通过指针解引用操作可以改变a所占内存中的值，同样也可以通过插入汇编指令修改a所占内存的值</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在C++中，const修饰的变量是必须初始化的，而且<strong>本质上是一个常量</strong>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span> a = <span class="number">20</span>;</span><br><span class="line">    <span class="keyword">int</span> <span class="built_in">array</span>[a] = &#123;&#125;; <span class="comment">//此行不会报错，因为a已经被常量20替换了</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span> c = b;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    此处const修饰的变量c不能称为常量，因为变量b不是立即数，不会在编译阶段用立即数替换它，所以称为常变量</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> *p = (<span class="keyword">int</span>*)&amp;a;</span><br><span class="line">    *p = <span class="number">30</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d %d %d \n&quot;</span>, a, *p, *(&amp;a));</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    打印值为：20 30 20；编译阶段对代码的优化*(&amp;a)也会直接替换成20</span></span><br><span class="line"><span class="comment">    程序中出现变量a的地方都已经被20替换了，但对a所占内存中的值进行指针解引用时，内存中的值改为30</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>C和C++中const的区别是什么？</p>
+<p>对const的编译方式不同，C中，const就是当作一个变量来编译生成指令的；而C++中，所有用const修饰的变量，都会被<strong>初始化的值作为常量替换了</strong>。</p>
+<p>const修饰的量常出现的错误是：</p>
+<ol>
+<li><p>常量不能再作为左值；</p>
+</li>
+<li><p>不能把常量的地址泄漏给一个普通的指针或者普通的引用变量</p>
+</li>
+</ol>
+<h3 id="const与指针的结合"><a href="#const与指针的结合" class="headerlink" title="const与指针的结合"></a>const与指针的结合</h3><p>C++的语言规范：const修饰的是离它最近的类型</p>
 <ul>
-<li>ebp表示栈底地址</li>
-<li>esp表示栈顶地址</li>
+<li><p>const int <em>p = &a; const修饰的是int类型，即\</em>p不可以再被赋值，而p本身可以</p>
+</li>
+<li><p>int *const p = &a; const修饰的是int <em>类型，即\</em>p可以再被赋值，而p本身不可以</p>
+</li>
+<li><p>const int *const p = &a; 一个const修饰int类型，一个const修饰int <em>类型，所以p与\</em>p都不可以再被赋值</p>
+</li>
 </ul>
-<p><strong>每一次入栈出栈都会伴随这栈顶地址的变化。</strong></p>
-<p>如图所示：</p>
-<p><img src="https://i.loli.net/2020/10/28/emdck7ynQxwpK64.png" alt="函数调用栈详解.png"></p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sum</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">左括号对应的指令为：</span></span><br><span class="line"><span class="comment">push ebp 将ebp入栈</span></span><br><span class="line"><span class="comment">mov ebp, esp 将esp的值赋给ebp，现在ebp开始指向sum函数的栈底</span></span><br><span class="line"><span class="comment">sub esp, 4Ch 给sum函数开辟栈帧空间，大小为相对于栈底指针的偏移值4Ch(此处这个值是随意给的)</span></span><br><span class="line"><span class="comment">rep stos winodows系统下vs会将新开辟的栈帧空间全部赋值为0xCCCCCCCC，而Linux下的编译器没有此操作</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="keyword">int</span> temp = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-4], 0 将temp的值0放入栈底指针的偏移处，偏移量为ebp-4</span></span><br><span class="line">    temp = a + b;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    1.mov eax, dword ptr[ebp+0Ch] 将形参b的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">    2.add eax, dword ptr[ebp+8] 在eax寄存器中进行a与b的值的加操作</span></span><br><span class="line"><span class="comment">    3.mov dword ptr[ebp-4], eax 将eax寄存器中的值放入temp中</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">return</span> temp;</span><br><span class="line">    <span class="comment">//mov eax, dword ptr[ebp-4] 因为temp是局部变量，不能传出，所以将temp的值放入eax寄存器中</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">1.mov esp, ebp 回退栈帧，将栈空间交还给系统，将ebp的值赋给esp</span></span><br><span class="line"><span class="comment">  int* func()</span></span><br><span class="line"><span class="comment">  &#123;</span></span><br><span class="line"><span class="comment">  	int data = 10;</span></span><br><span class="line"><span class="comment">  	return &amp;data;</span></span><br><span class="line"><span class="comment">  &#125;</span></span><br><span class="line"><span class="comment">  这种写法不安全，因为在return前已经将栈帧空间交还给系统了</span></span><br><span class="line"><span class="comment">2.pop ebp 出栈，并将出栈的值赋给ebp，因为在左括号时将ebp入栈了，此时会将ebp重新指向main函数的栈底</span></span><br><span class="line"><span class="comment">3.pop 把出栈的内容，main()函数中下一行指令的地址，放入CPU的PC寄存器中(PC寄存器用于存放指令的地址)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-4], 0Ah 将a的值0Ah放入栈底指针的偏移处，偏移量为ebp-4</span></span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">20</span>;</span><br><span class="line">    <span class="comment">//mov dword ptr[ebp-8], 0Ah 将b的值14h放入栈底指针的偏移处，偏移量为ebp-8</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> ret = sum(a, b);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    1.将ret放入相对于栈底指针偏移量为ebp-0C处，初值为sum函数的返回值</span></span><br><span class="line"><span class="comment">    2.将sum函数的实参变量压入栈中，并且从右向左进行入栈；形参变量的内存开辟是调用方进行的 </span></span><br><span class="line"><span class="comment">      mov eax, dword ptr[ebp-8] 将b的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">      push eax 将实参变量b的值压入栈中</span></span><br><span class="line"><span class="comment">      mov eax, dword ptr[ebp-4] 将a的值放入eax寄存器中</span></span><br><span class="line"><span class="comment">      push eax 将实参变量a的值压入栈中</span></span><br><span class="line"><span class="comment">    3.call sum 函数调用指令，其作用分两步</span></span><br><span class="line"><span class="comment">      push EIP 将下一条指令的地址入栈保存起来</span></span><br><span class="line"><span class="comment">      sub esp, 4 对应移动栈顶指针</span></span><br><span class="line"><span class="comment">    4.add esp, 8 将两个形参变量占用的空间交还给系统，此时esp指向最初main()函数的栈顶</span></span><br><span class="line"><span class="comment">      mov dword ptr[ebp-0Ch], eax 将eax寄存器中存放的temp的值赋给ret</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;ret:&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">补充：</span></span><br><span class="line"><span class="comment">EAX：累加(Accumulator)寄存器，常用于函数返回值</span></span><br><span class="line"><span class="comment">ESP：堆栈(Stack)指针寄存器，指向堆栈顶部</span></span><br><span class="line"><span class="comment">EBP：基址指针寄存器，指向当前堆栈底部</span></span><br><span class="line"><span class="comment">EIP：指令寄存器，指向下一条指令的地址</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p><strong>const int *p; 与 int const *p;作用相同</strong></p>
+<p>在进行类型转换时，const右边没有指针即*的话，const不参与到类型转换中，如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">int</span> *<span class="keyword">const</span> p3 = &amp;a; <span class="comment">//int *const &lt;=&gt; int *</span></span><br><span class="line"><span class="keyword">int</span> *p4 = p3; <span class="comment">//int * &lt;=&gt; int *const</span></span><br><span class="line"><span class="comment">//这两种写法都是可以的，因为const没有参与类型</span></span><br></pre></td></tr></table></figure>
+
+<p>总结const与指针的类型转换公式：</p>
+<ul>
+<li><p>int * &lt;= const int *; 错误</p>
+</li>
+<li><p>const int * &lt;= int *; 正确</p>
+</li>
+<li><p>int ** &lt;= const int **; 错误</p>
+</li>
+<li><p>const int ** &lt;= int **; 错误</p>
+</li>
+<li><p>int ** &lt;= int <em>const \</em>; 错误</p>
+</li>
+<li><p>int <em>const * &lt;= int *</em>; 正确</p>
+</li>
+</ul>
+<h3 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h3><p><strong>引用是更安全的指针。</strong></p>
+<p><strong>引用必须初始化，且初始化的值必须可以被取地址，即不可以是立即数。</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">int</span> *p = &amp;a;</span><br><span class="line"><span class="keyword">int</span> &amp;b = a;</span><br><span class="line">*p = <span class="number">20</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; a &lt;&lt; <span class="string">&quot; &quot;</span> &lt;&lt; *p &lt;&lt; <span class="string">&quot; &quot;</span> &lt;&lt; b; <span class="comment">//20 20 20</span></span><br><span class="line">b = <span class="number">30</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; a &lt;&lt; *p &lt;&lt; b; <span class="comment">// 30 30 30</span></span><br></pre></td></tr></table></figure>
+
+<p>在汇编代码上指针与引用没有任何区别，都是先将a内存中的值放入寄存器中，再放入p或者b的内存中；而在修改值时，也都需要先进行指针解引用操作，然后再更改对应内存中的值。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">int</span> *p = &amp;a;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> *&amp;q = p;</span><br><span class="line"><span class="comment">//可以将引用还原为指针进行判断，即为const int **q = &amp;p;等价于const int ** &lt;= int **错误</span></span><br></pre></td></tr></table></figure>
+
 
     </div>
 
@@ -275,7 +305,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="https://lesliecheung7.github.io.git/2020/10/28/%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E8%AF%A6%E8%A7%A3/" title="函数调用栈详解">https://lesliecheung7.github.io.git/2020/10/28/函数调用栈详解/</a>
+    <a href="https://lesliecheung7.github.io.git/2020/11/09/const%E4%B8%8E%E6%8C%87%E9%92%88/" title="const与指针">https://lesliecheung7.github.io.git/2020/11/09/const与指针/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -295,13 +325,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/10/27/%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/" rel="prev" title="进程的虚拟地址空间">
-      <i class="fa fa-chevron-left"></i> 进程的虚拟地址空间
+    <a href="/2020/10/29/C++%E5%87%BD%E6%95%B0%E7%89%B9%E6%80%A7/" rel="prev" title="C++函数特性">
+      <i class="fa fa-chevron-left"></i> C++函数特性
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2020/10/29/%E7%BC%96%E8%AF%91%E9%93%BE%E6%8E%A5%E5%8E%9F%E7%90%86/" rel="next" title="编译链接原理">
-      编译链接原理 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -360,6 +387,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#const%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">const详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#const%E4%B8%8E%E6%8C%87%E9%92%88%E7%9A%84%E7%BB%93%E5%90%88"><span class="nav-number">2.</span> <span class="nav-text">const与指针的结合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">引用</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
