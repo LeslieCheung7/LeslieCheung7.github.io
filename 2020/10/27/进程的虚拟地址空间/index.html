@@ -29,7 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://i.loli.net/2020/10/27/H7SszMO9p3T5i4A.png">
 <meta property="article:published_time" content="2020-10-27T09:31:32.000Z">
-<meta property="article:modified_time" content="2020-10-29T09:56:35.562Z">
+<meta property="article:modified_time" content="2020-11-22T11:01:42.388Z">
 <meta property="article:author" content="LeslieCheung7">
 <meta property="article:tag" content="面试">
 <meta name="twitter:card" content="summary">
@@ -199,7 +199,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-29 17:56:35" itemprop="dateModified" datetime="2020-10-29T17:56:35+08:00">2020-10-29</time>
+                <time title="修改时间：2020-11-22 19:01:42" itemprop="dateModified" datetime="2020-11-22T19:01:42+08:00">2020-11-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -241,7 +241,7 @@
 <p>前提：在x86，32位Linux环境下</p>
 </blockquote>
 <p>程序在经过编译链接完成之后会产生一个.out(windows下为.exe)的可执行文件，并且存放在磁盘上，而当要运行这个可执行文件时会把它加载到内存中，并且系统会产生一个进程。但是该文件不可能直接加载到物理内存中，而是由系统为它分配一部分虚拟内存，称为进程的虚拟地址空间。</p>
-<p>供操作系统执行的二进制文件中，指令和数据**(会生成符号存放在符号表中的)**是分开存放的。原因如下：</p>
+<p>供操作系统执行的二进制文件中，指令和数据(会生成符号存放在符号表中的)是分开存放的。原因如下：</p>
 <ol>
 <li>程序执行之后，代码和数据可以被映射到不同属性的虚拟内存中。因为代码一般是只读的，而数据是可读可写的；</li>
 <li>现代CPU有强大的缓存体系。程序和代码分离可以提高程序的局部性，增加缓存命中的概率；</li>
