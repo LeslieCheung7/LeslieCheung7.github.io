@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"lesliecheung7.github.io.git","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本篇将详细介绍Linux网络编程下I&#x2F;O复用技术中的select函数。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="I&#x2F;O复用之select">
+<meta property="og:url" content="https://lesliecheung7.github.io.git/2020/11/23/IO%E5%A4%8D%E7%94%A8%E4%B9%8Bselect/index.html">
+<meta property="og:site_name" content="何时再见新月">
+<meta property="og:description" content="本篇将详细介绍Linux网络编程下I&#x2F;O复用技术中的select函数。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/11/23/1rvKVGsBj8PJf2y.png">
+<meta property="og:image" content="https://i.loli.net/2020/11/23/SZCJxpblhd4HsFQ.png">
+<meta property="og:image" content="https://i.loli.net/2020/11/23/FQjKOXfBGU2DYmN.png">
+<meta property="og:image" content="https://i.loli.net/2020/11/23/z9fT3ht7mrQuED4.png">
+<meta property="og:image" content="https://i.loli.net/2020/11/23/AtLv1zihW9Y8bKR.png">
+<meta property="article:published_time" content="2020-11-23T09:19:59.000Z">
+<meta property="article:modified_time" content="2020-11-23T09:22:03.840Z">
+<meta property="article:author" content="LeslieCheung7">
+<meta property="article:tag" content="自学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/11/23/1rvKVGsBj8PJf2y.png">
+
+<link rel="canonical" href="https://lesliecheung7.github.io.git/2020/11/23/IO%E5%A4%8D%E7%94%A8%E4%B9%8Bselect/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>I/O复用之select | 何时再见新月</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">何时再见新月</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">长恨此身非我有</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>分类<span class="badge">3</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>归档<span class="badge">7</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/2020/11/23/IO%E5%A4%8D%E7%94%A8%E4%B9%8Bselect/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="LeslieCheung7">
+      <meta itemprop="description" content="嗷呜呜呜呜呜呜呜~">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="何时再见新月">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          I/O复用之select
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-11-23 17:19:59 / 修改时间：17:22:03" itemprop="dateCreated datePublished" datetime="2020-11-23T17:19:59+08:00">2020-11-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+            <div class="post-description">本篇将详细介绍Linux网络编程下I/O复用技术中的select函数。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="I-O复用之select"><a href="#I-O复用之select" class="headerlink" title="I/O复用之select"></a>I/O复用之select</h3><h4 id="基于I-O复用的服务器端"><a href="#基于I-O复用的服务器端" class="headerlink" title="基于I/O复用的服务器端"></a>基于I/O复用的服务器端</h4><h5 id="多进程服务器端的缺点和解决方法"><a href="#多进程服务器端的缺点和解决方法" class="headerlink" title="多进程服务器端的缺点和解决方法"></a>多进程服务器端的缺点和解决方法</h5><p>为了构建并发服务器，只要有客户端连接请求就会创建新进程。这的确是实际操作中采用的一种方案，但是因为创建进程需要大量的运算和内存空间，并且由于每个进程都具有独立的内存空间，所以相互间的数据交换也要求采用相对复杂的方法，例如IPC属于相对复杂的通信方法，会提高编程难度。</p>
+<blockquote>
+<p> 所以本章将讲解的I/O复用就是可以在不创建进程的同时向多个客户端提供服务。</p>
+</blockquote>
+<h5 id="理解复用"><a href="#理解复用" class="headerlink" title="理解复用"></a>理解复用</h5><p>复用的含义：为了提高物理设备的效率，用最少的物理要素传递最多数据时使用的技术。</p>
+<h5 id="复用技术在服务端的应用"><a href="#复用技术在服务端的应用" class="headerlink" title="复用技术在服务端的应用"></a>复用技术在服务端的应用</h5><p>为便于比较，先给出多进程服务器端模型，如图所示：</p>
+<p><img src="https://i.loli.net/2020/11/23/1rvKVGsBj8PJf2y.png" alt="多进程服务器端模型.png"></p>
+<p>如下图模型引入了复用技术，可以减少进程数。重要的是，无论连接多少客户端，提供服务的进程只有一个。</p>
+<p><img src="https://i.loli.net/2020/11/23/SZCJxpblhd4HsFQ.png" alt="IO复用服务器端模型.png"></p>
+<h4 id="理解select函数并实现服务器端"><a href="#理解select函数并实现服务器端" class="headerlink" title="理解select函数并实现服务器端"></a>理解select函数并实现服务器端</h4><h5 id="select函数的功能和调用顺序"><a href="#select函数的功能和调用顺序" class="headerlink" title="select函数的功能和调用顺序"></a>select函数的功能和调用顺序</h5><p>使用select函数时可以将多个文件描述符集中到一起统一监视，项目如下：</p>
+<ul>
+<li>是否存在套接字接收数据？</li>
+<li>无需阻塞传输数据的套接字有哪些？</li>
+<li>哪些套接字发生了异常？</li>
+</ul>
+<blockquote>
+<p>注意：上述监视项称为”事件”，发生监视项对应情况时，称”发生了事件”。</p>
+</blockquote>
+<p>接下来介绍select函数的调用方法和顺序，如图所示：</p>
+<p><img src="https://i.loli.net/2020/11/23/FQjKOXfBGU2DYmN.png" alt="select函数调用过程.png"></p>
+<p>从图中可以看到，调用select函数前需要一些准备工作，调用后还需查看结果。接下来按照上述顺序逐一讲解。</p>
+<h5 id="设置文件描述符"><a href="#设置文件描述符" class="headerlink" title="设置文件描述符"></a>设置文件描述符</h5><p>利用select函数可以同时监视多个文件描述符。当然，监视文件描述符也可以视为监视套接字。此时首先需要将要监视的文件描述符集中到一起。集中时也要按照监视项(接收，传输，异常)进行区分，即按照上述3种监视项分成3类。</p>
+<p>使用fd_set数组变量执行此项操作，<strong>该数组是存有0和1的位数组。</strong>若该位设置为1，则表示该文件描述符是监视对象。</p>
+<p>那么，我们是否应当通过文件描述符的数字直接将值注册到fd_set变量吗？当然不是！针对fd_set变量的操作是以位为单位进行的，直接操作该变量会非常繁琐。所以，<strong>fd_set变量中注册或更改值的操作都由下列宏完成</strong>。</p>
+<ul>
+<li>FD_ZERO(fd_set* fdset)：将fd_set变量的所有位初始化为0</li>
+<li>FD_SET(int fd, fd_set* fdset)：在参数fdset指向的变量中注册文件描述符fd的信息</li>
+<li>FD_CLR(int fd, fd_set* fdset)：从参数fdset指向的变量中清除文件描述符fd的信息</li>
+<li>FD_ISSET(int fd, fd_set* fdset)：若参数fdset指向的变量中包含文件描述符fd的信息，则返回”真”</li>
+</ul>
+<p>上述函数中，FD_ISSET用于验证select函数的调用结果，如下图可以解释这些函数的功能：</p>
+<p><img src="https://i.loli.net/2020/11/23/z9fT3ht7mrQuED4.png" alt="fd_set相关函数的功能.png"></p>
+<h5 id="设置检查-监视-范围及超时"><a href="#设置检查-监视-范围及超时" class="headerlink" title="设置检查(监视)范围及超时"></a>设置检查(监视)范围及超时</h5><p>首先先简单介绍select函数：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/select.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/time.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> maxfd, fd_set* readset, fd_set* writeset, fd_set* exceptest</span></span></span><br><span class="line"><span class="function"><span class="params">    , <span class="keyword">const</span> struct timeval* timeout)</span></span>;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">参数：</span></span><br><span class="line"><span class="comment">maxfd：监视对象文件描述符数量</span></span><br><span class="line"><span class="comment">readset：将所有关注&quot;是否存在待读取数据&quot;的文件描述符注册到fd_set型变量，并传递其地址值</span></span><br><span class="line"><span class="comment">sriteset：将所有关注&quot;是否可传输无阻塞数据&quot;的文件描述符注册到fd_set型变量，并传递其地址值</span></span><br><span class="line"><span class="comment">exceptset：将所有关注&quot;是否发生异常&quot;的文件描述符注册到fd_set型变量，并传递其地址值</span></span><br><span class="line"><span class="comment">timeout：调用select函数后，为防止陷入无限阻塞的状态，传递超时(timeout)信息</span></span><br><span class="line"><span class="comment">返回值：成功时返回大于0的值，该值是发生事件的文件描述符数；失败时返回-1；超时时返回0</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>如上所述，select函数用来验证3种监视项的变化情况。根据监视项声明3个fd_set型变量，分别向其注册文件描述符信息，并把变量的地址值传递到上述函数的第二到第四个参数。但在此之前，需要先决定下面的事。</p>
+<p>第一，文件描述符的监视范围与lelect函数的的第一个参数有关。实际上，select函数要求通过第一个参数传递监视对象文件描述符的数量。因此，需要得到注册在fd_set变量中的文件描述符数。但每次新建文件描述符时，其值都会增1，<strong>故只需将最大的文件描述符值加1再传递到select函数即可</strong>。加1是因为文件描述符的值从0开始。</p>
+<p>第二，select函数的超时时间与select函数的最后一个参数有关，其中timeval结构体定义如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">long</span> tv_sec;	<span class="comment">//seconds</span></span><br><span class="line">    <span class="keyword">long</span> tv_usec;	<span class="comment">//microseconds</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本来<strong>select函数只有在监视的文件描述符发生变化时才返回</strong>。如果未发生变化就会进入阻塞状态。指定超时时间就是为了防止这种情况的发生。通过声明上述结构体变量，将秒数填入tv_sec成员，将毫秒数填入tv_usec成员，然后将结构体的地址值传递到select函数的最后一个参数。此时，即使文件描述符中未发生变化，只要过了指定时间，也可以从函数中返回。不过这种情况下，select函数返回0。因此，可以通过返回值了解返回原因。如果不想设置超时，则传递NULL参数。</p>
+<h5 id="调用select函数后查看结果"><a href="#调用select函数后查看结果" class="headerlink" title="调用select函数后查看结果"></a>调用select函数后查看结果</h5><p>文件描述符的变化：是指监视的文件描述符中发生了相应的监视事件。例如，通过select的第二个参数传递的集合中存在需要读数据的描述符时，就意味着文件描述符发生变化。</p>
+<p>向select函数的第二到第四个参数传递的fd_set变量中将产生如下图所示变化：</p>
+<p><img src="https://i.loli.net/2020/11/23/AtLv1zihW9Y8bKR.png" alt="fd_set变量的变化.png"></p>
+<p>由上图可知，select函数调用完成后，向其传递的fd_set变量中将发生变化。原来为1的所有位均变为0，但发生变化的文件描述符对应位除外。因此，可以认为值仍为1的位置上的文件描述符发生了变化。</p>
+<h4 id="实现I-O复用服务器端"><a href="#实现I-O复用服务器端" class="headerlink" title="实现I/O复用服务器端"></a>实现I/O复用服务器端</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;arpa/inet.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/select.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BUF_SIZE 100</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SERVER_PORT 6000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SERVER_IP <span class="meta-string">&quot;127.0.0.1&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ser_sock, cli_sock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">ser_addr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">cli_addr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">timeout</span>;</span></span><br><span class="line">    fd_set reads, cpy_reads;</span><br><span class="line">    <span class="keyword">socklen_t</span> addr_sz;</span><br><span class="line">    <span class="keyword">int</span> fd_max, fd_num, <span class="built_in">strlen</span>;</span><br><span class="line">    <span class="keyword">char</span> recvbuf[BUF_SIZE] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    </span><br><span class="line">    ser_sock = socket(PF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    assert(ser_sock != <span class="number">-1</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">memset</span>(&amp;ser_addr, <span class="number">0</span>, <span class="keyword">sizeof</span>(ser_addr));</span><br><span class="line">    ser_addr.sin_famliy = AF_INET;</span><br><span class="line">    ser_addr.sin_port = htons(atoi(SERVER_PORT));</span><br><span class="line">    ser_addr.sin_addr.s_addr = htonl(SERVER_IP);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (bind(ser_sock, (struct sockaddr*)&amp;ser_addr, <span class="keyword">sizeof</span>(ser_addr)) == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;bind defeated!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (listen(ser_sock, <span class="number">5</span>) == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;listen defeated!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//初始化fd_set变量</span></span><br><span class="line">    FD_ZERO(&amp;reads);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    向要传到select函数第二个参数的fd_set变量reads注册服务器端套接字。这样，接收数据情况的监视对象就	包含了服务器端套接字。客户端的连接请求同样通过传出数据完成。因此，服务器端套接字中有接收的数据，就	 意味着有新的连接请求。</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    FD_SET(ser_sock, &amp;reads);</span><br><span class="line">    fd_max = ser_sock;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        将准备好的fd_set变量reads的内容复制到cpy_reads变量，因为调用select函数后，除发生变化的文		 件描述符对应位外，剩下的所有位将初始化为0。因此，为了保存初值，必须先进行这个复制过程。</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        cpy_reads = reads;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        为了设置select函数的超时而添加的。但不能在循环外设置超时，因为调用select函数后，结构体			timeval的成员的值将被替换为超时前剩余事件。因此调用select函数前，每次都要初始化timeval结构		   体变量。</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        timeout.tv_sec = <span class="number">5</span>;</span><br><span class="line">        timeout.tv_usec = <span class="number">5000</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> ((fd_num = select(fd_max + <span class="number">1</span>, &amp;cpy_reads, <span class="number">0</span>, <span class="number">0</span>, &amp;timeout)) == <span class="number">-1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="keyword">if</span> (fd_num == <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (; i &lt; fd_max + <span class="number">1</span>, ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//查找发生状态变化的文件描述符</span></span><br><span class="line">            <span class="keyword">if</span> (FD_ISSET(i, &amp;cpy_reads))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//首先验证服务器端套接字是否发生变化，如果是则受理连接请求</span></span><br><span class="line">                <span class="keyword">if</span> (i == ser_sock)</span><br><span class="line">                &#123;</span><br><span class="line">                    addr_sz = <span class="keyword">sizeof</span>(cli_addr);</span><br><span class="line">                    cli_sock = </span><br><span class="line">                        accept(ser_sock, (struct sockaddr*)&amp;cli_addr, &amp;addr_sz);</span><br><span class="line">                    <span class="comment">//注册了与客户端连接的套接字文件描述符</span></span><br><span class="line">                    FD_SET(cli_sock, &amp;reads);</span><br><span class="line">                    <span class="keyword">if</span> (fd_max &lt; cli_sock)</span><br><span class="line">                    &#123;</span><br><span class="line">                        fd_max = cli_sock;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;connected client: %d\n&quot;</span>, cli_sock);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//不是服务器端套接字发生状态变化，即有要接收的数据</span></span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">strlen</span> = read(i, recvbuf, BUF_SIZE);</span><br><span class="line">                    <span class="comment">//接收的数据为EOF时需要关闭套接字，并从reads中删除相应信息</span></span><br><span class="line">                    <span class="keyword">if</span> (<span class="built_in">strlen</span> == <span class="number">0</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        FD_CLR(i, &amp;reads);</span><br><span class="line">                        close(i);</span><br><span class="line">                        <span class="built_in">printf</span>(<span class="string">&quot;closed client: %d\n&quot;</span>, i);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">//接收到数据时，执行回声服务</span></span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                    &#123;</span><br><span class="line">                        write(i, recvbuf, <span class="built_in">strlen</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">				&#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    close(ser_sock);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <div>
+      
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>LeslieCheung7
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lesliecheung7.github.io.git/2020/11/23/IO%E5%A4%8D%E7%94%A8%E4%B9%8Bselect/" title="I&#x2F;O复用之select">https://lesliecheung7.github.io.git/2020/11/23/IO复用之select/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%AD%A6/" rel="tag"><i class="fa fa-tag"></i> 自学</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/22/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="prev" title="网络编程">
+      <i class="fa fa-chevron-left"></i> 网络编程
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O%E5%A4%8D%E7%94%A8%E4%B9%8Bselect"><span class="nav-number">1.</span> <span class="nav-text">I&#x2F;O复用之select</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8EI-O%E5%A4%8D%E7%94%A8%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF"><span class="nav-number">1.1.</span> <span class="nav-text">基于I&#x2F;O复用的服务器端</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%9A%E8%BF%9B%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E7%9A%84%E7%BC%BA%E7%82%B9%E5%92%8C%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">1.1.1.</span> <span class="nav-text">多进程服务器端的缺点和解决方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%90%86%E8%A7%A3%E5%A4%8D%E7%94%A8"><span class="nav-number">1.1.2.</span> <span class="nav-text">理解复用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%8D%E7%94%A8%E6%8A%80%E6%9C%AF%E5%9C%A8%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">1.1.3.</span> <span class="nav-text">复用技术在服务端的应用</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%90%86%E8%A7%A3select%E5%87%BD%E6%95%B0%E5%B9%B6%E5%AE%9E%E7%8E%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF"><span class="nav-number">1.2.</span> <span class="nav-text">理解select函数并实现服务器端</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#select%E5%87%BD%E6%95%B0%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E8%B0%83%E7%94%A8%E9%A1%BA%E5%BA%8F"><span class="nav-number">1.2.1.</span> <span class="nav-text">select函数的功能和调用顺序</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">1.2.2.</span> <span class="nav-text">设置文件描述符</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E6%A3%80%E6%9F%A5-%E7%9B%91%E8%A7%86-%E8%8C%83%E5%9B%B4%E5%8F%8A%E8%B6%85%E6%97%B6"><span class="nav-number">1.2.3.</span> <span class="nav-text">设置检查(监视)范围及超时</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%B0%83%E7%94%A8select%E5%87%BD%E6%95%B0%E5%90%8E%E6%9F%A5%E7%9C%8B%E7%BB%93%E6%9E%9C"><span class="nav-number">1.2.4.</span> <span class="nav-text">调用select函数后查看结果</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0I-O%E5%A4%8D%E7%94%A8%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF"><span class="nav-number">1.3.</span> <span class="nav-text">实现I&#x2F;O复用服务器端</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="LeslieCheung7"
+      src="/images/head.jpg">
+  <p class="site-author-name" itemprop="name">LeslieCheung7</p>
+  <div class="site-description" itemprop="description">嗷呜呜呜呜呜呜呜~</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">何时再见新月</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">25k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">23 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
