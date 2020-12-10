@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"lesliecheung7.github.io.git","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本篇包括面试中有关进程与线程的问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程与线程">
+<meta property="og:url" content="https://lesliecheung7.github.io.git/2020/12/10/%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/index.html">
+<meta property="og:site_name" content="何时再见新月">
+<meta property="og:description" content="本篇包括面试中有关进程与线程的问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/12/08/KMAZQV29r1Pojuz.png">
+<meta property="og:image" content="https://i.loli.net/2020/12/08/Z4RDJ6HcVFANI79.png">
+<meta property="og:image" content="https://i.loli.net/2020/12/08/oRb8swGhyUFA1HV.png">
+<meta property="article:published_time" content="2020-12-10T08:22:03.000Z">
+<meta property="article:modified_time" content="2020-12-10T08:23:20.249Z">
+<meta property="article:author" content="LeslieCheung7">
+<meta property="article:tag" content="面试">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/12/08/KMAZQV29r1Pojuz.png">
+
+<link rel="canonical" href="https://lesliecheung7.github.io.git/2020/12/10/%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>进程与线程 | 何时再见新月</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">何时再见新月</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">长恨此身非我有</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/2020/12/10/%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="LeslieCheung7">
+      <meta itemprop="description" content="嗷呜呜呜呜呜呜呜~">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="何时再见新月">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          进程与线程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-12-10 16:22:03 / 修改时间：16:23:20" itemprop="dateCreated datePublished" datetime="2020-12-10T16:22:03+08:00">2020-12-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+            <div class="post-description">本篇包括面试中有关进程与线程的问题。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="进程与线程"><a href="#进程与线程" class="headerlink" title="进程与线程"></a>进程与线程</h3><h4 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h4><h5 id="什么是进程？"><a href="#什么是进程？" class="headerlink" title="什么是进程？"></a>什么是进程？</h5><p>我们编写的代码只是一个存储在硬盘的静态文件，通过编译后就会生成二进制可执行文件，当我们运行这个可执行文件后，它会被装载到内存中，接着 CPU 会执行程序中的每一条指令，那么这个<strong>运行中的程序，就被称为「进程」</strong>。</p>
+<p>现在有一个会读取硬盘文件数据的程序被执行了，那么当运行到读取文件的指令时，就会去从硬盘读取数据，但是硬盘的读写速度是非常慢的，那么在这个时候，如果 CPU 等硬盘返回数据的话，那 CPU 的利用率是非常低的。</p>
+<p>所以，当进程要从硬盘读取数据时，CPU 不需要阻塞等待数据的返回，而是去执行另外的进程。当硬盘数据返回时，CPU 会收到个<strong>中断</strong>，于是 CPU 再继续运行这个进程。</p>
+<p>这种<strong>多个程序、交替执行</strong>的思想，就有 CPU 管理多个进程的初步想法。</p>
+<p>对于一个支持多进程的系统，CPU 会从一个进程快速切换至另一个进程，其间每个进程各运行几十或几百毫秒。</p>
+<p>虽然单核的 CPU 在某一个瞬间，只能运行一个进程。但在 1 秒钟期间，它可能会运行多个进程，这样就产生<strong>并行的错觉</strong>，实际上这是<strong>并发</strong>。</p>
+<h5 id="并发和并行有什么区别？"><a href="#并发和并行有什么区别？" class="headerlink" title="并发和并行有什么区别？"></a>并发和并行有什么区别？</h5><p><img src="https://i.loli.net/2020/12/08/KMAZQV29r1Pojuz.png" alt="并发与并行.png"></p>
+<h4 id="进程的状态"><a href="#进程的状态" class="headerlink" title="进程的状态"></a>进程的状态</h4><p><strong>在一个进程的活动期间至少具备三种基本状态，即运行状态、就绪状态、阻塞状态。</strong></p>
+<ul>
+<li>运行状态（<em>Runing</em>）：该时刻进程占用 CPU；</li>
+<li>就绪状态（<em>Ready</em>）：可运行，但因为其他进程正在运行而暂停停止；</li>
+<li>阻塞状态（<em>Blocked</em>）：该进程正在等待某一事件发生（如等待输入/输出操作的完成）而暂时停止运行，这时，即使给它CPU控制权，它也无法运行；</li>
+</ul>
+<p>当然，进程另外两个基本状态：</p>
+<ul>
+<li>创建状态（<em>new</em>）：进程正在被创建时的状态；</li>
+<li>结束状态（<em>Exit</em>）：进程正在从系统中消失时的状态；</li>
+</ul>
+<p>于是，一个完整的进程状态的变迁如下图：</p>
+<p><img src="https://i.loli.net/2020/12/08/Z4RDJ6HcVFANI79.png" alt="进程的五种状态.png"></p>
+<p>再来详细说明一下进程的状态变迁：</p>
+<ul>
+<li><em>NULL -&gt; 创建状态</em>：一个新进程被创建时的第一个状态；</li>
+<li><em>创建状态 -&gt; 就绪状态</em>：当进程被创建完成并初始化后，一切就绪准备运行时，变为就绪状态，这个过程是很快的；</li>
+<li><em>就绪态 -&gt; 运行状态</em>：处于就绪状态的进程被操作系统的进程调度器选中后，就分配给 CPU 正式运行该进程；</li>
+<li><em>运行状态 -&gt; 结束状态</em>：当进程已经运行完成或出错时，会被操作系统作结束状态处理；</li>
+<li><em>运行状态 -&gt; 就绪状态</em>：处于运行状态的进程在运行过程中，由于分配给它的运行时间片用完，操作系统会把该进程变为就绪态，接着从就绪态选中另外一个进程运行；</li>
+<li><em>运行状态 -&gt; 阻塞状态</em>：当进程请求某个事件且必须等待时，例如请求 I/O 事件；</li>
+<li><em>阻塞状态 -&gt; 就绪状态</em>：当进程要等待的事件完成时，它从阻塞状态变到就绪状态；</li>
+</ul>
+<p>另外，还有一个状态叫<strong>挂起状态</strong>，它表示进程没有占有物理内存空间。这跟阻塞状态是不一样，阻塞状态是等待某个事件的返回。</p>
+<p>由于虚拟内存管理原因，进程的所使用的空间可能并没有映射到物理内存，而是在硬盘上，这时进程就会出现挂起状态，另外调用 sleep 也会被挂起。</p>
+<p>挂起状态可以分为两种：</p>
+<ul>
+<li>阻塞挂起状态：进程在外存（硬盘）并等待某个事件的出现；</li>
+<li>就绪挂起状态：进程在外存（硬盘），但只要进入内存，即刻立刻运行；</li>
+</ul>
+<p>这两种挂起状态加上前面的五种状态，就变成了七种状态变迁，见如下图：</p>
+<p><img src="https://i.loli.net/2020/12/08/oRb8swGhyUFA1HV.png" alt="进程的七种状态.png"></p>
+<h4 id="进程的控制结构"><a href="#进程的控制结构" class="headerlink" title="进程的控制结构"></a>进程的控制结构</h4><p>在操作系统中，是用<strong>进程控制块</strong>（<em>process control block，PCB</em>）数据结构来描述进程的。</p>
+<p><strong>PCB 是进程存在的唯一标识</strong>，这意味着一个进程的存在，必然会有一个 PCB，如果进程消失了，那么 PCB 也会随之消失。</p>
+<h5 id="PCB-具体包含什么信息呢？"><a href="#PCB-具体包含什么信息呢？" class="headerlink" title="PCB 具体包含什么信息呢？"></a>PCB 具体包含什么信息呢？</h5><p><strong>进程描述信息：</strong></p>
+<ul>
+<li>进程标识符：标识各个进程，每个进程都有一个并且唯一的标识符；</li>
+<li>用户标识符：进程归属的用户，用户标识符主要为共享和保护服务；</li>
+</ul>
+<p><strong>进程控制和管理信息：</strong></p>
+<ul>
+<li>进程当前状态，如 new、ready、running、waiting 或 blocked 等；</li>
+<li>进程优先级：进程抢占 CPU 时的优先级；</li>
+</ul>
+<p><strong>资源分配清单：</strong></p>
+<ul>
+<li>有关内存地址空间或虚拟地址空间的信息，所打开文件的列表和所使用的 I/O 设备信息。</li>
+</ul>
+<p><strong>CPU 相关信息：</strong></p>
+<ul>
+<li>CPU 中各个寄存器的值，当进程被切换时，CPU 的状态信息都会被保存在相应的 PCB 中，以便进程重新执行时，能从断点处继续执行。</li>
+</ul>
+<h5 id="每个-PCB-是如何组织的呢？"><a href="#每个-PCB-是如何组织的呢？" class="headerlink" title="每个 PCB 是如何组织的呢？"></a>每个 PCB 是如何组织的呢？</h5><p>通常是通过<strong>链表</strong>的方式进行组织，把具有<strong>相同状态的进程链在一起，组成各种队列</strong>。比如：</p>
+<ul>
+<li>将所有处于就绪状态的进程链在一起，称为<strong>就绪队列</strong>；</li>
+<li>把所有因等待某事件而处于等待状态的进程链在一起就组成各种<strong>阻塞队列</strong>；</li>
+<li>另外，对于运行队列在单核 CPU 系统中则只有一个运行指针了，因为单核 CPU 在某个时间，只能运行一个程序。</li>
+</ul>
+<p>除了链接的组织方式，还有索引方式，它的工作原理：将同一状态的进程组织在一个索引表中，索引表项指向相应的 PCB，不同状态对应不同的索引表。</p>
+<p>一般会选择链表，因为可能面临进程创建，销毁等调度导致进程状态发生变化，所以链表能够更加灵活的插入和删除。</p>
+<h4 id="进程的控制"><a href="#进程的控制" class="headerlink" title="进程的控制"></a>进程的控制</h4><p>我们熟知了进程的状态变迁和进程的数据结构 PCB 后，再来看看进程的<strong>创建、终止、阻塞、唤醒</strong>的过程，这些过程也就是进程的控制。</p>
+<p><strong>01 创建进程</strong></p>
+<p>操作系统允许一个进程创建另一个进程，而且允许子进程继承父进程所拥有的资源，当子进程被终止时，其在父进程处继承的资源应当还给父进程。同时，终止父进程时同时也会终止其所有的子进程。</p>
+<p>创建进程的过程如下：</p>
+<ul>
+<li>为新进程分配一个唯一的进程标识号，并申请一个空白的 PCB，PCB 是有限的，若申请失败则创建失败；</li>
+<li>为进程分配资源，此处如果资源不足，进程就会进入等待状态，以等待资源；</li>
+<li>初始化 PCB；</li>
+<li>如果进程的调度队列能够接纳新进程，那就将进程插入到就绪队列，等待被调度运行；</li>
+</ul>
+<p><strong>02 终止进程</strong></p>
+<p>进程可以有 3 种终止方式：正常结束、异常结束以及外界干预（信号 <code>kill</code> 掉）。</p>
+<p>终止进程的过程如下：</p>
+<ul>
+<li>查找需要终止的进程的 PCB；</li>
+<li>如果处于执行状态，则立即终止该进程的执行，然后将 CPU 资源分配给其他进程；</li>
+<li>如果其还有子进程，则应将其所有子进程终止；</li>
+<li>将该进程所拥有的全部资源都归还给父进程或操作系统；</li>
+<li>将其从 PCB 所在队列中删除；</li>
+</ul>
+<p><strong>03 阻塞进程</strong></p>
+<p>当进程需要等待某一事件完成时，它可以调用阻塞语句把自己阻塞等待。而一旦被阻塞等待，它只能由另一个进程唤醒。</p>
+<p>阻塞进程的过程如下：</p>
+<ul>
+<li>找到将要被阻塞进程标识号对应的 PCB；</li>
+<li>如果该进程为运行状态，则保护其现场，将其状态转为阻塞状态，停止运行；</li>
+<li>将该 PCB 插入的阻塞队列中去；</li>
+</ul>
+<p><strong>04 唤醒进程</strong></p>
+<p>进程由「运行」转变为「阻塞」状态是由于进程必须等待某一事件的完成，所以处于阻塞状态的进程是绝对不可能叫醒自己的。</p>
+<p>如果某进程正在等待 I/O 事件，需由别的进程发消息给它，则只有当该进程所期待的事件出现时，才由发现者进程用唤醒语句叫醒它。</p>
+<p>唤醒进程的过程如下：</p>
+<ul>
+<li>在该事件的阻塞队列中找到相应进程的 PCB；</li>
+<li>将其从阻塞队列中移出，并置其状态为就绪状态；</li>
+<li>把该 PCB 插入到就绪队列中，等待调度程序调度；</li>
+</ul>
+<p>进程的阻塞和唤醒是一对功能相反的语句，如果某个进程调用了阻塞语句，则必有一个与之对应的唤醒语句。</p>
+<h4 id="进程的上下文切换"><a href="#进程的上下文切换" class="headerlink" title="进程的上下文切换"></a>进程的上下文切换</h4><p>各个进程之间是共享 CPU 资源的，在不同的时候进程之间需要切换，让不同的进程可以在 CPU 执行，那么这个<strong>一个进程切换到另一个进程运行，称为进程的上下文切换</strong>。</p>
+<h5 id="CPU-上下文切换"><a href="#CPU-上下文切换" class="headerlink" title="CPU 上下文切换"></a>CPU 上下文切换</h5><p>大多数操作系统都是多任务，通常支持大于 CPU 数量的任务同时运行。实际上，这些任务并不是同时运行的，只是因为系统在很短的时间内，让各个任务分别在 CPU 运行，于是就造成同时运行的错觉。</p>
+<p>任务是交给 CPU 运行的，那么在每个任务运行前，CPU 需要知道任务从哪里加载，又从哪里开始运行。</p>
+<p>所以，操作系统需要事先帮 CPU 设置好 <strong>CPU 寄存器和程序计数器</strong>。</p>
+<p>CPU 寄存器是 CPU 内部一个容量小，但是速度极快的内存（缓存）。</p>
+<p>程序计数器则是用来存储 CPU 正在执行的指令位置、或者即将执行的下一条指令位置。</p>
+<p>所以说，CPU 寄存器和程序计数是 CPU 在运行任何任务前，所必须依赖的环境，这些环境就叫做 <strong>CPU 上下文</strong>。</p>
+<p>CPU 上下文切换就是先把前一个任务的 CPU 上下文（CPU 寄存器和程序计数器）保存起来，然后加载新任务的上下文到这些寄存器和程序计数器，最后再跳转到程序计数器所指的新位置，运行新任务。</p>
+<p>系统内核会存储保持下来的上下文信息，当此任务再次被分配给 CPU 运行时，CPU 会重新加载这些上下文，这样就能保证任务原来的状态不受影响，让任务看起来还是连续运行。</p>
+<p>上面说到所谓的「任务」，主要包含进程、线程和中断。所以，可以根据任务的不同，把 CPU 上下文切换分成：<strong>进程上下文切换、线程上下文切换和中断上下文切换</strong>。</p>
+<h5 id="进程的上下文切换-1"><a href="#进程的上下文切换-1" class="headerlink" title="进程的上下文切换"></a>进程的上下文切换</h5><p>进程是由内核管理和调度的，所以进程的切换只能发生在内核态。</p>
+<p>所以，<strong>进程的上下文切换不仅包含了虚拟内存、栈、全局变量等用户空间的资源，还包括了内核堆栈、寄存器等内核空间的资源。</strong></p>
+<p>通常，会把交换的信息保存在进程的 PCB，当要运行另外一个进程的时候，我们需要从这个进程的 PCB 取出上下文，然后恢复到 CPU 中，这使得这个进程可以继续执行。</p>
+<h5 id="发生进程上下文切换有哪些场景？"><a href="#发生进程上下文切换有哪些场景？" class="headerlink" title="发生进程上下文切换有哪些场景？"></a>发生进程上下文切换有哪些场景？</h5><ul>
+<li>为了保证所有进程可以得到公平调度，CPU 时间被划分为一段段的时间片，这些时间片再被轮流分配给各个进程。这样，当某个进程的时间片耗尽了，就会被系统挂起，切换到其它正在等待 CPU 的进程运行；</li>
+<li>进程在系统资源不足（比如内存不足）时，要等到资源满足后才可以运行，这个时候进程也会被挂起，并由系统调度其他进程运行；</li>
+<li>当进程通过睡眠函数 sleep 这样的方法将自己主动挂起时，自然也会重新调度；</li>
+<li>当有优先级更高的进程运行时，为了保证高优先级进程的运行，当前进程会被挂起，由高优先级进程来运行；</li>
+<li>发生硬件中断时，CPU 上的进程会被中断挂起，转而执行内核中的中断服务程序；</li>
+</ul>
+<h4 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h4><p>需要有一种新的实体，满足以下特性：</p>
+<ul>
+<li>实体之间可以并发运行；</li>
+<li>实体之间共享相同的地址空间；</li>
+</ul>
+<p>这个新的实体，就是**线程( <em>Thread</em> )**，线程之间可以并发运行且共享相同的地址空间。</p>
+<p><strong>线程是进程当中的一条执行流程。</strong></p>
+<p>同一个进程内多个线程之间可以共享代码段、数据段、打开的文件等资源，但每个线程都有独立一套的寄存器和栈，这样可以确保线程的控制流是相对独立的。</p>
+<h5 id="线程的优缺点？"><a href="#线程的优缺点？" class="headerlink" title="线程的优缺点？"></a>线程的优缺点？</h5><p>线程的优点：</p>
+<ul>
+<li>一个进程中可以同时存在多个线程；</li>
+<li>各个线程之间可以并发执行；</li>
+<li>各个线程之间可以共享地址空间和文件等资源；</li>
+</ul>
+<p>线程的缺点：</p>
+<ul>
+<li>当进程中的一个线程奔溃时，会导致其所属进程的所有线程奔溃。</li>
+</ul>
+<h4 id="线程与进程的比较"><a href="#线程与进程的比较" class="headerlink" title="线程与进程的比较"></a>线程与进程的比较</h4><p>线程与进程的比较如下：</p>
+<ul>
+<li>进程是资源（包括内存、打开的文件等）分配的单位，线程是 CPU 调度的单位；</li>
+<li>进程拥有一个完整的资源平台，而线程只独享必不可少的资源，如寄存器和栈；</li>
+<li>线程同样具有就绪、阻塞、执行三种基本状态，同样具有状态之间的转换关系；</li>
+<li>线程能减少并发执行的时间和空间开销；</li>
+</ul>
+<p>对于，线程相比进程能减少开销，体现在：</p>
+<ul>
+<li>线程的创建时间比进程快，因为进程在创建的过程中，还需要资源管理信息，比如内存管理信息、文件管理信息，而线程在创建的过程中，不会涉及这些资源管理信息，而是共享它们；</li>
+<li>线程的终止时间比进程快，因为线程释放的资源相比进程少很多；</li>
+<li>同一个进程内的线程切换比进程切换快，因为线程具有相同的地址空间（虚拟内存共享），这意味着同一个进程的线程都具有同一个页表，那么在切换的时候不需要切换页表。而对于进程之间的切换，切换的时候要把页表给切换掉，而页表的切换过程开销是比较大的；</li>
+<li>由于同一进程的各线程间共享内存和文件资源，那么在线程之间数据传递的时候，就不需要经过内核了，这就使得线程之间的数据交互效率更高了；</li>
+</ul>
+<p>所以，线程比进程不管是时间效率，还是空间效率都要高。</p>
+<h4 id="线程的上下文切换"><a href="#线程的上下文切换" class="headerlink" title="线程的上下文切换"></a>线程的上下文切换</h4><p>线程与进程最大的区别在于：<strong>线程是调度的基本单位，而进程则是资源拥有的基本单位</strong>。</p>
+<p>所以，所谓操作系统的任务调度，实际上的调度对象是线程，而进程只是给线程提供了虚拟内存、全局变量等资源。</p>
+<p>对于线程和进程，我们可以这么理解：</p>
+<ul>
+<li>当进程只有一个线程时，可以认为进程就等于线程；</li>
+<li>当进程拥有多个线程时，这些线程会共享相同的虚拟内存和全局变量等资源，这些资源在上下文切换时是不需要修改的；</li>
+</ul>
+<p>另外，线程也有自己的私有数据，比如栈和寄存器等，这些在上下文切换时也是需要保存的。</p>
+<h5 id="线程上下文切换的是什么？"><a href="#线程上下文切换的是什么？" class="headerlink" title="线程上下文切换的是什么？"></a>线程上下文切换的是什么？</h5><p>这还得看线程是不是属于同一个进程：</p>
+<ul>
+<li>当两个线程不是属于同一个进程，则切换的过程就跟进程上下文切换一样；</li>
+<li><strong>当两个线程是属于同一个进程，因为虚拟内存是共享的，所以在切换时，虚拟内存这些资源就保持不动，只需要切换线程的私有数据、寄存器等不共享的数据</strong>；</li>
+</ul>
+<p>所以，线程的上下文切换相比进程，开销要小很多。</p>
+<h4 id="线程的实现"><a href="#线程的实现" class="headerlink" title="线程的实现"></a>线程的实现</h4><p>主要有三种线程的实现方式：</p>
+<ul>
+<li><strong>用户线程（User Thread）</strong>：在用户空间实现的线程，不是由内核管理的线程，是由用户态的线程库来完成线程的管理；</li>
+<li><strong>内核线程（Kernel Thread）</strong>：在内核中实现的线程，是由内核管理的线程；</li>
+<li><strong>轻量级进程（LightWeight Process）</strong>：在内核中来支持用户线程；</li>
+</ul>
+<h5 id="用户线程如何理解？存在什么优势和缺陷？"><a href="#用户线程如何理解？存在什么优势和缺陷？" class="headerlink" title="用户线程如何理解？存在什么优势和缺陷？"></a>用户线程如何理解？存在什么优势和缺陷？</h5><p>用户线程是基于用户态的线程管理库来实现的，那么<strong>线程控制块（*Thread Control Block, TCB*）</strong> 也是在库里面来实现的，对于操作系统而言是看不到这个 TCB 的，它只能看到整个进程的 PCB。</p>
+<p>所以，<strong>用户线程的整个线程管理和调度，操作系统是不直接参与的，而是由用户级线程库函数来完成线程的管理，包括线程的创建、终止、同步和调度等。</strong></p>
+<p>用户级线程的模型，也就类似前面提到的<strong>多对一</strong>的关系，即多个用户线程对应同一个内核线程。</p>
+<p>用户线程的<strong>优点</strong>：</p>
+<ul>
+<li>每个进程都需要有它私有的线程控制块（TCB）列表，用来跟踪记录它各个线程状态信息（PC、栈指针、寄存器），TCB 由用户级线程库函数来维护，可用于不支持线程技术的操作系统；</li>
+<li>用户线程的切换也是由线程库函数来完成的，无需用户态与内核态的切换，所以速度特别快；</li>
+</ul>
+<p>用户线程的<strong>缺点</strong>：</p>
+<ul>
+<li>由于操作系统不参与线程的调度，如果一个线程发起了系统调用而阻塞，那进程所包含的用户线程都不能执行了。</li>
+<li>当一个线程开始运行后，除非它主动地交出 CPU 的使用权，否则它所在的进程当中的其他线程无法运行，因为用户态的线程没法打断当前运行中的线程，它没有这个特权，只有操作系统才有，但是用户线程不是由操作系统管理的。</li>
+<li>由于时间片分配给进程，故与其他进程比，在多线程执行时，每个线程得到的时间片较少，执行会比较慢；</li>
+</ul>
+<h5 id="那内核线程如何理解？存在什么优势和缺陷？"><a href="#那内核线程如何理解？存在什么优势和缺陷？" class="headerlink" title="那内核线程如何理解？存在什么优势和缺陷？"></a>那内核线程如何理解？存在什么优势和缺陷？</h5><p><strong>内核线程是由操作系统管理的，线程对应的 TCB 自然是放在操作系统里的，这样线程的创建、终止和管理都是由操作系统负责。</strong></p>
+<p>内核线程的模型，也就类似前面提到的<strong>一对一</strong>的关系，即一个用户线程对应一个内核线程。</p>
+<p>内核线程的<strong>优点</strong>：</p>
+<ul>
+<li>在一个进程当中，如果某个内核线程发起系统调用而被阻塞，并不会影响其他内核线程的运行；</li>
+<li>分配给线程，多线程的进程获得更多的 CPU 运行时间；</li>
+</ul>
+<p>内核线程的<strong>缺点</strong>：</p>
+<ul>
+<li>在支持内核线程的操作系统中，由内核来维护进程和线程的上下问信息，如 PCB 和 TCB；</li>
+<li>线程的创建、终止和切换都是通过系统调用的方式来进行，因此对于系统来说，系统开销比较大；</li>
+</ul>
+<h5 id="最后的轻量级进程如何理解？"><a href="#最后的轻量级进程如何理解？" class="headerlink" title="最后的轻量级进程如何理解？"></a>最后的轻量级进程如何理解？</h5><p><strong>轻量级进程（*Light-weight process，LWP*）是内核支持的用户线程，一个进程可有一个或多个 LWP，每个 LWP 是跟内核线程一对一映射的，也就是 LWP 都是由一个内核线程支持。</strong></p>
+<p>另外，LWP 只能由内核管理并像普通进程一样被调度，Linux 内核是支持 LWP 的典型例子。</p>
+<p>在大多数系统中，<strong>LWP与普通进程的区别也在于它只有一个最小的执行上下文和调度程序所需的统计信息</strong>。一般来说，一个进程代表程序的一个实例，而 LWP 代表程序的执行线程，因为一个执行线程不像进程那样需要那么多状态信息，所以 LWP 也不带有这样的信息。</p>
+<p>在 LWP 之上也是可以使用用户线程的，那么 LWP 与用户线程的对应关系就有三种：</p>
+<ul>
+<li><code>1 : 1</code>，即一个 LWP 对应 一个用户线程；</li>
+<li><code>N : 1</code>，即一个 LWP 对应多个用户线程；</li>
+<li><code>N : N</code>，即多个 LMP 对应多个用户线程；</li>
+</ul>
+<p><strong>1 : 1 模式</strong></p>
+<p>一个线程对应到一个 LWP 再对应到一个内核线程。</p>
+<ul>
+<li>优点：实现并行，当一个 LWP 阻塞，不会影响其他 LWP；</li>
+<li>缺点：每一个用户线程，就产生一个内核线程，创建线程的开销较大。</li>
+</ul>
+<p><strong>N : 1 模式</strong></p>
+<p>多个用户线程对应一个 LWP 再对应一个内核线程，线程管理是在用户空间完成的，此模式中用户的线程对操作系统不可见。</p>
+<ul>
+<li>优点：用户线程要开几个都没问题，且上下文切换发生用户空间，切换的效率较高；</li>
+<li>缺点：一个用户线程如果阻塞了，则整个进程都将会阻塞，另外在多核 CPU  中，是没办法充分利用 CPU 的。</li>
+</ul>
+<p><strong>M : N 模式</strong></p>
+<p>根据前面的两个模型混搭一起，就形成 <code>M:N</code> 模型，该模型提供了两级控制，首先多个用户线程对应到多个 LWP，LWP 再一一对应到内核线程。</p>
+<ul>
+<li>优点：综合了前两种优点，大部分的线程上下文发生在用户空间，且多个线程又可以充分利用多核 CPU 的资源。</li>
+</ul>
+<p><strong>组合模式</strong></p>
+<p>此进程结合 <code>1:1</code> 模型和 <code>M:N</code> 模型。开发人员可以针对不同的应用特点调节内核线程的数目来达到物理并行性和逻辑并行性的最佳方案。</p>
+
+    </div>
+
+    
+    
+    
+
+    <div>
+      
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>LeslieCheung7
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lesliecheung7.github.io.git/2020/12/10/%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/" title="进程与线程">https://lesliecheung7.github.io.git/2020/12/10/进程与线程/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%9D%A2%E8%AF%95/" rel="tag"><i class="fa fa-tag"></i> 面试</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/10/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/" rel="prev" title="进程间通信">
+      <i class="fa fa-chevron-left"></i> 进程间通信
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/10/C++%E9%9D%A2%E8%AF%95%E6%B1%87%E6%80%BB/" rel="next" title="C++面试汇总">
+      C++面试汇总 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">进程与线程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">进程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%BF%9B%E7%A8%8B%EF%BC%9F"><span class="nav-number">1.1.1.</span> <span class="nav-text">什么是进程？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%92%8C%E5%B9%B6%E8%A1%8C%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.1.2.</span> <span class="nav-text">并发和并行有什么区别？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81"><span class="nav-number">1.2.</span> <span class="nav-text">进程的状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%8E%A7%E5%88%B6%E7%BB%93%E6%9E%84"><span class="nav-number">1.3.</span> <span class="nav-text">进程的控制结构</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#PCB-%E5%85%B7%E4%BD%93%E5%8C%85%E5%90%AB%E4%BB%80%E4%B9%88%E4%BF%A1%E6%81%AF%E5%91%A2%EF%BC%9F"><span class="nav-number">1.3.1.</span> <span class="nav-text">PCB 具体包含什么信息呢？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%AF%8F%E4%B8%AA-PCB-%E6%98%AF%E5%A6%82%E4%BD%95%E7%BB%84%E7%BB%87%E7%9A%84%E5%91%A2%EF%BC%9F"><span class="nav-number">1.3.2.</span> <span class="nav-text">每个 PCB 是如何组织的呢？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%8E%A7%E5%88%B6"><span class="nav-number">1.4.</span> <span class="nav-text">进程的控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2"><span class="nav-number">1.5.</span> <span class="nav-text">进程的上下文切换</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#CPU-%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2"><span class="nav-number">1.5.1.</span> <span class="nav-text">CPU 上下文切换</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2-1"><span class="nav-number">1.5.2.</span> <span class="nav-text">进程的上下文切换</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%91%E7%94%9F%E8%BF%9B%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E6%9C%89%E5%93%AA%E4%BA%9B%E5%9C%BA%E6%99%AF%EF%BC%9F"><span class="nav-number">1.5.3.</span> <span class="nav-text">发生进程上下文切换有哪些场景？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.6.</span> <span class="nav-text">线程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9%EF%BC%9F"><span class="nav-number">1.6.1.</span> <span class="nav-text">线程的优缺点？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E4%B8%8E%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-number">1.7.</span> <span class="nav-text">线程与进程的比较</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2"><span class="nav-number">1.8.</span> <span class="nav-text">线程的上下文切换</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E7%9A%84%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.8.1.</span> <span class="nav-text">线程上下文切换的是什么？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.9.</span> <span class="nav-text">线程的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E7%BA%BF%E7%A8%8B%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%EF%BC%9F%E5%AD%98%E5%9C%A8%E4%BB%80%E4%B9%88%E4%BC%98%E5%8A%BF%E5%92%8C%E7%BC%BA%E9%99%B7%EF%BC%9F"><span class="nav-number">1.9.1.</span> <span class="nav-text">用户线程如何理解？存在什么优势和缺陷？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%82%A3%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%EF%BC%9F%E5%AD%98%E5%9C%A8%E4%BB%80%E4%B9%88%E4%BC%98%E5%8A%BF%E5%92%8C%E7%BC%BA%E9%99%B7%EF%BC%9F"><span class="nav-number">1.9.2.</span> <span class="nav-text">那内核线程如何理解？存在什么优势和缺陷？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E7%9A%84%E8%BD%BB%E9%87%8F%E7%BA%A7%E8%BF%9B%E7%A8%8B%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%EF%BC%9F"><span class="nav-number">1.9.3.</span> <span class="nav-text">最后的轻量级进程如何理解？</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="LeslieCheung7"
+      src="/images/head.jpg">
+  <p class="site-author-name" itemprop="name">LeslieCheung7</p>
+  <div class="site-description" itemprop="description">嗷呜呜呜呜呜呜呜~</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">何时再见新月</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">92k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">1:24</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
