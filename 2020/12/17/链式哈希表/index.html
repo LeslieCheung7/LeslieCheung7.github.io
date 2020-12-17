@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"lesliecheung7.github.io.git","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本篇将详细讲解链式哈希表，以及链式哈希表的实现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="链式哈希表">
+<meta property="og:url" content="https://lesliecheung7.github.io.git/2020/12/17/%E9%93%BE%E5%BC%8F%E5%93%88%E5%B8%8C%E8%A1%A8/index.html">
+<meta property="og:site_name" content="何时再见新月">
+<meta property="og:description" content="本篇将详细讲解链式哈希表，以及链式哈希表的实现。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-12-17T01:59:35.000Z">
+<meta property="article:modified_time" content="2020-12-17T03:20:25.027Z">
+<meta property="article:author" content="LeslieCheung7">
+<meta property="article:tag" content="自学">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://lesliecheung7.github.io.git/2020/12/17/%E9%93%BE%E5%BC%8F%E5%93%88%E5%B8%8C%E8%A1%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>链式哈希表 | 何时再见新月</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">何时再见新月</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">长恨此身非我有</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>分类<span class="badge">5</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>归档<span class="badge">15</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://lesliecheung7.github.io.git/2020/12/17/%E9%93%BE%E5%BC%8F%E5%93%88%E5%B8%8C%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="LeslieCheung7">
+      <meta itemprop="description" content="嗷呜呜呜呜呜呜呜~">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="何时再见新月">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          链式哈希表
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-12-17 09:59:35 / 修改时间：11:20:25" itemprop="dateCreated datePublished" datetime="2020-12-17T09:59:35+08:00">2020-12-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">数据结构</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+            <div class="post-description">本篇将详细讲解链式哈希表，以及链式哈希表的实现。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="链式哈希表"><a href="#链式哈希表" class="headerlink" title="链式哈希表"></a>链式哈希表</h3><p>无序关联容器底层为链式哈希表（也称为散列表）；有序关联容器底层为红黑树。</p>
+<blockquote>
+<p>如果一组数据，通过一种映射方式，能够找到该数据存储的位置，那么支持这种映射关系存储数据的数据结构称为哈希表。</p>
+</blockquote>
+<p>现有1，5，7，7000四个数，要求存储方式能满足查询的时间复杂度为O(1)。那么用数组的方式必须申请7001个int类型的空间，虽然采用空间换取时间的思想，且时间复杂度达到要求为O(1)，但无疑这种方式太过于浪费空间。所以需要一种映射方式，能存储这四个数并且查询的时间复杂度为O(1)，这种映射方式称为哈希函数。</p>
+<p>除留余数法就是一种映射方式，即为一种哈希函数。</p>
+<p>除留余数法可能造成两个不同的数被分配到同一个桶中（bucket），这种情况称为哈希冲突或哈希碰撞。</p>
+<p> <strong><em>怎么解决哈希冲突呢？</em></strong></p>
+<ul>
+<li>线性探测法</li>
+<li>链地址法（链式哈希表）</li>
+</ul>
+<p>链地址法是指在每个桶内添加一个链表，若发生哈希冲突，则继续向链表末尾添加数据。</p>
+<ul>
+<li>增加元素的时间复杂度：O(1)</li>
+<li>查询元素的时间复杂度：O(1)</li>
+<li>删除元素的时间复杂度：O(1)</li>
+</ul>
+<p><strong>但是，若链表的长度过长，定位到对应的哈希桶后，对链表进行查询也会耗费时间，所以对数据的查询的时间复杂度就会趋近于O(N)。</strong></p>
+<p>所以对选择的哈希函数提出了如下要求：</p>
+<ul>
+<li>所选择的哈希函数一定能够把元素均匀离散的放入各个桶当中</li>
+<li>对于除留余数法，为了减少结果的重复，要求除数是一个素数</li>
+<li>衡量哈希表使用情况的参数，loadfactor称为加载因子</li>
+</ul>
+<p>加载因子（loadfactor） = 已被占用的桶的个数 / 桶的总数量 &gt; 0.75；则哈希表需要进行扩容。</p>
+<p>哈希表按照依次素数的大小进行扩容，或者进行2倍扩容。</p>
+<p><strong><em>那么扩容后的哈希表，需要将原来哈希表中的元素再进行哈希吗？</em></strong></p>
+<p>需要，并且代价比较高，但由于链式哈希表中每一个节点是通过链表进行存储的，链表上的节点可以直接进行移动，所以扩容的代价也是可以接受的，但还是要尽量避免扩容。</p>
+<p>下面给出实现链式哈希表代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;list&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> K, <span class="keyword">typename</span> V&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Pair</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	Pair(<span class="keyword">const</span> K&amp; k = K(), <span class="keyword">const</span> V&amp; v = v())</span><br><span class="line">		: first(k)</span><br><span class="line">		, second(v)</span><br><span class="line">	&#123; &#125;</span><br><span class="line"></span><br><span class="line">	K first;</span><br><span class="line">	V second;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> K, <span class="keyword">typename</span> V&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HashMap</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="comment">//构造函数，默认桶个数为3，加载因子为0.75</span></span><br><span class="line">	HashMap(<span class="keyword">int</span> size = <span class="number">3</span>, <span class="keyword">double</span> loadFactor = <span class="number">0.75</span>)</span><br><span class="line">		: _loadFactor(loadFactor)</span><br><span class="line">		, _usedBucketNumber(<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="comment">//按照size开辟了空间，并且给vector添加了size个list默认构造的容器</span></span><br><span class="line">		_hashMap.resize(size);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//插入元素操作，key值不能重复</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">insert</span><span class="params">(<span class="keyword">const</span> Pair&lt;K, V&gt;&amp; <span class="built_in">pair</span>)</span></span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="keyword">double</span> lf = _usedBucketNumber * <span class="number">1.0</span> / _hashMap.size();</span><br><span class="line">		<span class="keyword">if</span> (lf &gt; _loadFactor)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">//扩容</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//index是桶的下标</span></span><br><span class="line">		<span class="keyword">int</span> index = <span class="built_in">pair</span>.first % _hashMap.size();</span><br><span class="line">		<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&amp; myList = _hashMap[index];</span><br><span class="line">		<span class="keyword">if</span> (myList.empty())</span><br><span class="line">		&#123;</span><br><span class="line">			_usedBucketNumber++;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">auto</span>&amp; item : myList)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">if</span> (item.first == <span class="built_in">pair</span>.first)</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="comment">//key值已存在，不插入重复元素</span></span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		myList.push_back(<span class="built_in">pair</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//删除元素操作</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">erase</span><span class="params">(<span class="keyword">const</span> K&amp; key)</span></span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="keyword">int</span> index = key % _hashMap.size();</span><br><span class="line">		<span class="keyword">auto</span>&amp; myList = _hashMap[index];</span><br><span class="line">		<span class="keyword">if</span> (!myList.empty())</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">auto</span> it = myList.begin(); it != myList.end(); ++it)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">if</span> (it-&gt;first == key)</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="comment">//迭代器已经失效，需要更新迭代器</span></span><br><span class="line">					myList.erase(it);</span><br><span class="line">					<span class="comment">//若删除后桶为空，则将计数减1</span></span><br><span class="line">					<span class="keyword">if</span> (myList.empty())</span><br><span class="line">					&#123;</span><br><span class="line">						_usedBucketNumber--;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//重载中括号运算符，赋新值或者替换旧值</span></span><br><span class="line">	V&amp; <span class="keyword">operator</span>[](<span class="keyword">const</span> K&amp; key)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> index = key % _hashMap.size();</span><br><span class="line">		<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&amp; myList = _hashMap[index];</span><br><span class="line">		<span class="comment">//若为空则赋新值</span></span><br><span class="line">		<span class="keyword">if</span> (myList.empty())</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">//放入一个空桶中</span></span><br><span class="line">			_usedBucketNumber++;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//若不为空则查询，替换旧值</span></span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">auto</span>&amp; item : myList)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">if</span> (item.first == key)</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="keyword">return</span> item.second;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		myList.push_back(&#123; key, V() &#125;);</span><br><span class="line">		<span class="comment">//把myList尾节点的second值返回</span></span><br><span class="line">		<span class="keyword">return</span> myList.back().second;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//传入key，返回包含key值的K-V对的迭代器</span></span><br><span class="line">	Pair&lt;K, V&gt;* find(const K&amp; key)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> index = key % _hashMap.size();</span><br><span class="line">		<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&amp; myList = _hashMap[index];</span><br><span class="line">		<span class="keyword">if</span> (!myList.empty())</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">auto</span>&amp; item : myList)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">if</span> (item.first == key)</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="keyword">return</span> &amp;item;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="comment">//自定义链式哈希表结构</span></span><br><span class="line">	<span class="built_in">vector</span>&lt;<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&gt; _hashMap;</span><br><span class="line">	<span class="comment">//加载因子</span></span><br><span class="line">	<span class="keyword">double</span> _loadFactor;</span><br><span class="line">	<span class="comment">//记录已经使用的桶个数</span></span><br><span class="line">	<span class="keyword">int</span> _usedBucketNumber;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//哈希表扩容操作</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">expand</span><span class="params">()</span></span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="built_in">vector</span>&lt;<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&gt; oldHashMap;</span><br><span class="line">		<span class="comment">//swap函数只是交换容器里的元素，没有内存的开辟释放操作</span></span><br><span class="line">		_hashMap.swap(oldHashMap);</span><br><span class="line">		<span class="comment">//原哈希表已成空表，需要重新指定扩容后大小</span></span><br><span class="line">		_hashMap.resize(oldHashMap.size() * <span class="number">2</span> + <span class="number">1</span>);</span><br><span class="line">		_usedBucketNumber = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//遍历oldHashMap中每一个不空的桶，将节点摘下来放入哈希表中</span></span><br><span class="line">		<span class="keyword">for</span> (<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&amp; myList : oldHashMap)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">while</span> (!myList.empty())</span><br><span class="line">			&#123;</span><br><span class="line">				Pair&lt;K, V&gt;&amp; <span class="built_in">pair</span> = myList.front();</span><br><span class="line">				<span class="keyword">int</span> index = <span class="built_in">pair</span>.first % _hashMap.size();</span><br><span class="line">				<span class="built_in">list</span>&lt;Pair&lt;K, V&gt;&gt;&amp; newList = _hashMap[index];</span><br><span class="line">				<span class="keyword">if</span> (newList.empty())</span><br><span class="line">				&#123;</span><br><span class="line">					_usedBucketNumber++;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">//将myList的第一个节点剪下放到newList的第一个节点</span></span><br><span class="line">				newList.splice(newList.begin(), myList, myList.begin());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	HashMap&lt;<span class="keyword">int</span>, <span class="built_in">string</span>&gt; hashmap1;</span><br><span class="line">	hashmap1.insert(&#123; <span class="number">17</span>, <span class="string">&quot;刘亦菲&quot;</span> &#125;);</span><br><span class="line">	hashmap1.insert(&#123; <span class="number">27</span>, <span class="string">&quot;刘诗诗&quot;</span> &#125;);</span><br><span class="line">	hashmap1.insert(&#123; <span class="number">37</span>, <span class="string">&quot;高圆圆&quot;</span> &#125;);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; hashmap1[<span class="number">27</span>] &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; hashmap1.find(<span class="number">27</span>)-&gt;second &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <div>
+      
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>LeslieCheung7
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lesliecheung7.github.io.git/2020/12/17/%E9%93%BE%E5%BC%8F%E5%93%88%E5%B8%8C%E8%A1%A8/" title="链式哈希表">https://lesliecheung7.github.io.git/2020/12/17/链式哈希表/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%AD%A6/" rel="tag"><i class="fa fa-tag"></i> 自学</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/10/C++%E9%9D%A2%E8%AF%95%E6%B1%87%E6%80%BB/" rel="prev" title="C++面试汇总">
+      <i class="fa fa-chevron-left"></i> C++面试汇总
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%93%BE%E5%BC%8F%E5%93%88%E5%B8%8C%E8%A1%A8"><span class="nav-number">1.</span> <span class="nav-text">链式哈希表</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="LeslieCheung7"
+      src="/images/head.jpg">
+  <p class="site-author-name" itemprop="name">LeslieCheung7</p>
+  <div class="site-description" itemprop="description">嗷呜呜呜呜呜呜呜~</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">何时再见新月</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">97k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">1:28</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
