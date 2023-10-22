@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>纱雾教你下载android源码</title>
+      <link href="/2023/10/22/framework-source-code/"/>
+      <url>/2023/10/22/framework-source-code/</url>
+      
+        <content type="html"><![CDATA[<p>学习 Android 不能离开源码，但是 Android 源码太过于庞大，所以可以选择只下载 Framework 层的源码，大小只有 900MB，也可以满足学习需要。</p><p>由于官方下载需要魔法，且速度很慢，所以选择国内的镜像进行下载：</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">git</span> clone git://mirrors.ustc.edu.cn/aosp/platform/frameworks/base <span class="token parameter variable">--depth</span><span class="token operator">=</span><span class="token number">1</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>上述选择中科大的镜像进行下载，–depth&#x3D;1 指只下载最后一次 commit 之后的内容，不会下载历史提交记录，这样可以防止下载过多资源，但是代码只可以查看，不能提交到 github上。</p><p>对比中科大上传镜像源的时间（2020年11月），可以判断出这份代码是 Android 11 版本的代码。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Android </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 源码下载 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>第 367 场周赛解题报告</title>
       <link href="/2023/10/16/weekly-contest-367/"/>
       <url>/2023/10/16/weekly-contest-367/</url>
